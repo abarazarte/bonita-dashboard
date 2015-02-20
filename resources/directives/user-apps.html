@@ -1,0 +1,32 @@
+<div class="bs-component bs-apps-pane" ng-mouseenter="hover('apps')" ng-mouseleave="hover('apps')" ng-controller="AppListController as listCtrl">
+	<legend class="text-primary"><span class="glyphicon glyphicon-th"></span> Aplicaciones</legend>
+	<div class="panel panel-primary">
+		<div class="panel-body">
+			<a class="btn btn-primary btn-xs panel-top-right-button" ng-click="listCtrl.updateView(true)" title="Refresh"><span class="glyphicon glyphicon-refresh"></span></a>
+			
+			<div ng-show="listCtrl.list.totalCount > 0 || filterText !== ''" class="sortable">
+				<div ng-show="listCtrl.isFilterDisplayed()" class="input-group input-group-sm col-lg-6 filter">
+				</div>
+				<table>
+					<thead>
+					<tr>
+						<th ng-repeat="header in listCtrl.tableHeaders" 
+							ng-class="listCtrl.getHeaderClass(header)" 
+							ng-click="listCtrl.orderBy(header)">{{header.label}}
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr ng-repeat="app in listCtrl.getFilteredAndSortedList()">
+						<td ng-class="listCtrl.getCellClass('displayName')">{{app.displayName}}</td>
+						<td ng-class="listCtrl.getCellClass('version')">{{app.version}}</td>
+						<td ng-class="listCtrl.getCellClass('startIt')"><a class="btn btn-info btn-xs" ng-click="openStartModal(app.id, app.displayName, app.version, 'startApp', '')" title="Start a case"><span>{{app.displayName}}</span></a></td>
+					</tr>
+					</tbody>
+				</table>
+				<pagination-container></pagination-container>
+			</div>
+			<h4 ng-show="listCtrl.list.totalCount === 0 && filterText === ''">No available apps for the moment.</h4>
+		</div>
+	</div>
+</div>

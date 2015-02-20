@@ -1,0 +1,44 @@
+<div class="bs-component bs-stats-pane" ng-mouseenter="hover('indicators')" ng-mouseleave="hover('indicators')">
+	<legend class="text-primary"><span class="glyphicon glyphicon-user"></span> {{user.firstname}} {{user.lastname}}</legend>
+	<div class="panel panel-primary">
+		<div class="panel-body">
+			<div id='source-button' class='btn btn-success btn-xs' ng-show="showRest['indicators']" ng-click="openRestModal('countersModalContent.html')" title="Show REST operations">{ REST }</div>
+			<div class="col-lg-3">
+				<img src="{{ getAvatarUrl() }}" alt="Your avatar" class="avatar"/>
+			</div>
+			<div class="col-lg-9">
+				<table class="table table-striped table-hover table-condensed">
+					<thead>
+					<tr>
+						<th colspan="2">Tareas</th>
+						<th></th>
+						<th colspan="2">Casos</th>
+						<th></th>
+						<th>Aplicaciones</th>
+					</tr>
+					<tr>
+						<th>Disponibles</th>
+						<th>Realizadas</th>
+						<th></th>
+						<th>Abirtos</th>
+						<th>Finalizados</th>
+						<th></th>
+						<th>Disponibles</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<td>{{totalTasksToDo}}</td>
+						<td>{{totalArchivedTasks}}</td>
+						<td></td>
+						<td>{{totalCasesOpen}}</td>
+						<td>{{totalArchivedCases}}</td>
+						<td></td>
+						<td>{{totalAppsAvailable}}</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
