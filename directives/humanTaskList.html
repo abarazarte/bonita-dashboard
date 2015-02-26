@@ -1,0 +1,21 @@
+<table ng-show="taskListCtrl.tasks.items.length > 0" class="listing ready-tasks">
+<tr>
+	<th>Numero de correspondencia</th>
+	<th>Nombre de la tarea</th>
+	<th>Proceso</th>
+	<th>Prioridad</th>
+	<th>Fecha de </th>
+	<th></th>
+</tr>
+<tr ng-repeat="task in taskListCtrl.tasks.items">
+	<td>{{task.displayName}}</td>
+	<td>{{task.processId.displayName}} {{task.processId.version}}</td>
+	<td class="centered"><span ng-class="getPriorityIconClass(task.priority)" aria-hidden="true" title="{{task.priority}}"></span></td>
+	<td>{{task.reached_state_date | dateString}}</td>
+	<td>
+		<button class="btn btn-primary btn-sm" title="Execute" ng-click="openBonitaTaskForm(task)"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></button>
+	</td>
+</tr>
+</table>
+
+<h4 ng-show="taskListCtrl.tasks.items.length == 0">No posee tareas pendientes.</h4>
