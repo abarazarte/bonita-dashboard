@@ -15,6 +15,12 @@ appModule.config(function (bonitaConfigProvider) {
     bonitaConfigProvider.setBonitaUrl('/bonita');
 });
 
+appModule.constant('APP_CONFIG', {
+	//Resource base path (integration into Bonita custom pages)
+	'RESOURCE_PATH' : '',
+	//Max page size for listings in UI
+	'UI_PAGE_SIZE' : 10,
+});
 
 appModule.controller('PortalController', 
 	['$scope', 'bonitaAuthentication',
@@ -40,26 +46,6 @@ appModule.controller('PortalController',
 	
 	// Check for active session in case of page refresh
 	bonitaAuthentication.checkForActiveSession();
-}]);
-
-
-// Login controller
-appModule.controller('LoginController', ['$scope', function($scope){
-	$scope.username = null;
-	$scope.password = null;
-	$scope.isLoginInProgress = false;
-	$scope.errorMessage = null;
-	
-	this.login = function() {
-		$scope.isLoginInProgress = true;
-		$scope.errorMessage = null;
-		$scope.login($scope.username, $scope.password, function(isSuccess) {
-			$scope.username = null;
-			$scope.password = null;
-			$scope.isLoginInProgress = false;
-			$scope.errorMessage = isSuccess ? null : "Login failed: invalid username or password.";
-		});
-	};
 }]);
 
 
@@ -132,25 +118,27 @@ appModule.controller('ProcessDefinitionListController',
 
 // Task list controller
 appModule.controller('TaskListController',
-	['$scope', '$sce', '$modal', 'bonitaConfig', 'bonitaAuthentication', 'HumanTask', 'ArchivedHumanTask',
-	function($scope, $sce, $modal, bonitaConfig, bonitaAuthentication, HumanTask, ArchivedHumanTask){
+	['$scope', '$sce', '$modal', 'bonitaConfig', 'bonitaAuthentication', 'HumanTask', 'APP_CONFIG',
+	function($scope, $sce, $modal, bonitaConfig, bonitaAuthentication, HumanTask, APP_CONFIG){
 	
-	this.tasks = null;
+	this.list = {items : [], pageIndex : 0, pageSize : 0, totalCount : 0};
 	this.archivedTasks = null;
 	
 	var controller = this;
 	
-	this.refresh = function() {
-		controller.tasks = HumanTask.getFromCurrentUser({p: 0, c: 1000, d : 'processId'});
-		controller.archivedTasks = ArchivedHumanTask.getCompletedByCurrentUser({d : 'processId'});
+	this.refresh = function(forceDataRefresh) {
+		if(!forceDataRefresh)
+			return;
+		HumanTask.getFromCurrentUser({p: 0, c: 100, d : 'processId'}).$promise.then(function(result){
+			for(var i=0; i < result.items.length; i++){
+				result.items[i].procDefName = result.items[i].rootContainerId.displayName;
+			}
+			controller.list = result;
+		});
 	};
 
 	this.getTaskCount = function() {
-		return (controller.tasks == null) ? "-" : controller.tasks.totalCount;
-	};
-	
-	this.getArchivedTaskCount = function() {
-		return (controller.archivedTasks == null) ? "-" : controller.archivedTasks.totalCount;
+		return (controller.list == null) ? "-" : controller.list.totalCount;
 	};
 	
 	$scope.getPriorityIconClass = function(priority) {
@@ -167,6 +155,10 @@ appModule.controller('TaskListController',
 
 	this.getTaskName = function(name){
 		return name.substring(name.lastIndexOf("-")+1);
+	};
+
+	this.numPages = function(){
+		return Math.ceil(controller.list.items.length / 10);
 	};
 	
 	// Opens a modal dialog displaying a Bonita task form in an iFrame
@@ -195,7 +187,7 @@ appModule.controller('TaskListController',
 		function () { return bonitaAuthentication.isLogged; },
 		function (newValue, oldValue) {
 			if (newValue === true)
-				controller.refresh();
+				controller.refresh(true);
 		}
 	);
 	
@@ -203,20 +195,67 @@ appModule.controller('TaskListController',
 	$scope.$on('refresh_list', function(event) {
 		controller.refresh();
 	});
+
+	//Client side common pagination methods
+	this.hasPreviousPage = function() {	return hasPreviousPage(controller)	};
+	this.hasNextPage = function()	{	return hasNextPage(controller, APP_CONFIG)	};
+	this.showPreviousPage = function()	{	showPreviousPage(controller)	};
+	this.showNextPage = function()	{	showNextPage(controller)	};
+	this.getItems = function()	{	return getItems(controller, APP_CONFIG)	};
+	this.getCountLabel = function()	{ 	return getCountLabel(controller, APP_CONFIG)}
+
 }]);
+
+
+/*
+* COMMON PAGINATION METHODS
+*/
+
+function hasPreviousPage(controller){
+	return controller.list.pageIndex > 0;
+};
+
+function hasNextPage(controller, APP_CONFIG){
+	var startIndex = controller.list.pageIndex * APP_CONFIG.UI_PAGE_SIZE;
+	var endIndex = startIndex + APP_CONFIG.UI_PAGE_SIZE;
+	if(endIndex > controller.list.totalCount)
+			endIndex = controller.list.totalCount;
+	return endIndex < controller.list.totalCount;
+};
+
+function showPreviousPage(controller){
+	controller.list.pageIndex --;
+	controller.refresh(false);
+};
+
+function showNextPage(controller){
+	controller.list.pageIndex ++;
+	controller.refresh(false);
+};
+
+function getItems(controller, APP_CONFIG){
+	var startIndex = controller.list.pageIndex * APP_CONFIG.UI_PAGE_SIZE;
+	return controller.list.items.slice(startIndex, startIndex + APP_CONFIG.UI_PAGE_SIZE);
+};
+
+function getCountLabel(controller, APP_CONFIG){
+	if(!controller.list.items)
+		return '';
+	if(controller.list.totalCount === 0)
+		return '';
+
+	var startIndex = controller.list.pageIndex * APP_CONFIG.UI_PAGE_SIZE;
+	var endIndex = startIndex + APP_CONFIG.UI_PAGE_SIZE;
+	if (endIndex > controller.list.totalCount)
+		endIndex = controller.list.totalCount;
+	return 'Mostrando  '+ (startIndex+1) +' a '+ endIndex +' de '+ controller.list.totalCount;
+
+};
 
 
 /*
 * DIRECTIVES
 */
-
-// Login screen
-appModule.directive("login", function() {
-	return {
-		restrict: 'E',
-		templateUrl: 'directives/login.html'
-	};
-});
 
 // Home screen
 appModule.directive("home", function() {
@@ -226,7 +265,6 @@ appModule.directive("home", function() {
 	};
 });
 
-
 // Task lists
 appModule.directive("humanTaskList", function() {
 	return {
@@ -234,11 +272,13 @@ appModule.directive("humanTaskList", function() {
 		templateUrl: 'directives/humanTaskList.html'
 	};
 });
-appModule.directive("archivedHumanTaskList", function() {
+
+//Pagination controls
+appModule.directive("paginatorContainer", ['APP_CONFIG', function (APP_CONFIG) {
 	return {
 		restrict: 'E',
-		templateUrl: 'directives/archivedHumanTaskList.html'
+		templateUrl: 'directives/humanTaskList.html'
 	};
-});
+}])
 
 })();

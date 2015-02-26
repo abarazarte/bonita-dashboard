@@ -34,12 +34,12 @@
 			</div>
 			
 			<!-- TASKS -->
-			<div class="col-md-10" ng-controller="TaskListController as taskListCtrl">
+			<div class="col-md-10" ng-controller="TaskListController as listCtrl">
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h3 class="panel-title">
-							<span class="glyphicon glyphicon-list" aria-hidden="true"></span> Bandeja de Tareas <span class="badge">{{taskListCtrl.getTaskCount()}}</span> 
-							<button ng-click="taskListCtrl.refresh()" class="btn btn-primary btn-sm" title="Refrescar"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+							<span class="glyphicon glyphicon-list" aria-hidden="true"></span> Bandeja de Tareas <span class="badge">{{listCtrl.getTaskCount()}}</span> 
+							<button ng-click="listCtrl.refresh(true)" class="btn btn-primary btn-sm" title="Refrescar"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
 						</h3>
 					</div>
 					<div class="panel-body">
@@ -60,9 +60,9 @@
 									</tr>
 								</thead>
 								<tbody>
-									<tr ng-repeat="task in taskListCtrl.tasks.items | filter:filterText">
-										<td>{{taskListCtrl.getNumCor(task.displayName)}}</td>
-										<td>{{taskListCtrl.getTaskName(task.displayName)}}</td>
+									<tr ng-repeat="task in listCtrl.getItems() | filter:filterText">
+										<td>{{listCtrl.getNumCor(task.displayName)}}</td>
+										<td>{{listCtrl.getTaskName(task.displayName)}}</td>
 										<td>{{task.processId.displayName}} {{task.processId.version}}</td>
 										<td class="centered"><span ng-class="getPriorityIconClass(task.priority)" aria-hidden="true" title="{{task.priority}}"></span></td>
 										<td>{{task.reached_state_date | dateString}}</td>
@@ -72,7 +72,18 @@
 									</tr>
 								</tbody>
 							</table>
-							<pagination total-items="taskListCtrl.getTaskCount()" ng-model="bigCurrentPage" max-size="5" class="pagination-sm" boundary-links="true"></pagination>
+							<p></p>
+							<div>
+								<span>{{listCtrl.getCountLabel()}}</span>
+								<span>
+									<button class="btn btn-primary btn-xs" ng-click="listCtrl.showPreviousPage()" ng-disabled="!listCtrl.hasPreviousPage()" title="Pagina anterior">
+										<span class="glyphicon glyphicon-arrow-left"></span>
+									</button> 
+									<button class="btn btn-primary btn-xs" ng-click="listCtrl.showNextPage()" ng-disabled="!listCtrl.hasNextPage()" title="Pagina Siguiente">
+										<span class="glyphicon glyphicon-arrow-right"></span>
+									</button>
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
